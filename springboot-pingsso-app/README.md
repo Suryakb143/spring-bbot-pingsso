@@ -70,13 +70,29 @@ Navigate to `http://localhost:8080/h2-console`
 ### Authentication
 
 - **POST** `/api/auth/login` - User login
+
+  This endpoint can be used as a dummy PingSSO login for local testing. It creates a user, issues a session cookie, and returns a Bearer token without needing a real PingSSO provider.
+
+  Example request body:
   ```json
   {
     "email": "john.doe@example.com",
     "name": "John Doe",
-    "picture": "url-to-picture",
+    "picture": "https://example.com/avatar.png",
     "pingSsoId": "pingsso-001"
   }
+  ```
+
+  Example curl:
+  ```bash
+  curl -X POST http://localhost:8080/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email":"john.doe@example.com",
+      "name":"John Doe",
+      "picture":"https://example.com/avatar.png",
+      "pingSsoId":"pingsso-001"
+    }'
   ```
 
 - **POST** `/api/auth/logout` - User logout
