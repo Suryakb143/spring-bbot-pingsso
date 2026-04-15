@@ -1,0 +1,105 @@
+graph TB
+    subgraph Client["Client Layer"]
+        Angular["Angular Frontend<br/>(angular-pingsso-app)"]
+        Browser["Browser"]
+    end
+
+    subgraph API["API Layer"]
+        AuthCtrl["AuthController<br/>(/api/auth)"]
+        UserCtrl["UserController<br/>(/api/users)"]
+    end
+
+    subgraph Security["Security Layer"]
+        SessionFilter["SessionFilter<br/>(Extract sessionId)"]
+        BearerTokenFilter["BearerTokenFilter<br/>(Extract userId)"]
+        BearerTokenProvider["BearerTokenProvider<br/>(JWT Token Generation)"]
+        CORS["CORS Config<br/>(localhost:4200)"]
+    end
+
+    subgraph Services["Service Layer"]
+        UserService["UserService<br/>- createOrUpdateUser<br/>- recordLogin<br/>- getUserByEmail"]
+        SessionService["SessionService<br/>- createSession<br/>- getSession<br/>- invalidateSession<br/>- getActiveSessionsForUser"]
+    end
+
+    subgraph Entities["Entity/Data Layer"]
+        User["User Entity<br/>@Entity users<br/>- id, email, name<br/>- picture, roles<br/>- pingSsoId, lastLoginIp"]
+        Session["Session Entity<br/>@Entity sessions<br/>- sessionId, userId<br/>- email, ipAddress<br/>- createdAt, expiresAt"]
+    end
+
+    subgraph Repository["Repository Layer"]
+        UserRepo["UserRepository<br/>extends JpaRepository"]
+        SessionRepo["SessionRepository<br/>extends JpaRepository"]
+    end
+
+    subgraph Database["Database Layer"]
+        H2DB["H2 Database<br/>(In-Memory)"]
+    end
+
+    subgraph Config["Configuration Files"]
+        AppConfig["Application.yml<br/>- Port: 8080<br/>- Swagger config<br/>- Session timeout<br/>- JWT secret"]
+        SecurityConfig["SecurityConfig.java<br/>- CORS settings<br/>- Filter chains<br/>- Security rules"]
+        SwaggerConfig["SwaggerConfig.java<br/>- OpenAPI info<br/>- Bearer token def<br/>- API documentation"]
+    end
+
+    subgraph External["External Services"]
+        PingSSO["PingSSO OAuth2<br/>Provider"]
+    end
+
+    subgraph Testing["Testing & Documentation"]
+        Swagger["Swagger UI<br/>(/swagger-ui.html)"]
+        RestClient["REST Client<br/>(rest-client.http)"]
+        Postman["Postman Collection<br/>(PingSSO-API.json)"]
+        Docs["API Testing Guide<br/>(API_TESTING_GUIDE.md)"]
+    end
+
+    Angular -->|HTTP Requests| Browser
+    Browser -->|CORS| CORS
+
+    Browser -->|/api/auth/login| AuthCtrl
+    Browser -->|/api/auth/*| AuthCtrl
+    Browser -->|/api/users/*| UserCtrl
+    AuthCtrl -->|Authenticate| SessionFilter
+    AuthCtrl -->|Authenticate| BearerTokenFilter
+
+    AuthCtrl -->|createOrUpdateUser| UserService
+    AuthCtrl -->|recordLogin| UserService
+    AuthCtrl -->|getUserByEmail| UserService
+    AuthCtrl -->|createSession| SessionService
+    AuthCtrl -->|getSession| SessionService
+    AuthCtrl -->|invalidateSession| SessionService
+    AuthCtrl -->|getActiveSessionsForUser| SessionService
+
+    AuthCtrl -->|generateToken| BearerTokenProvider
+
+    UserService -->|persist/query| User
+    SessionService -->|persist/query| Session
+
+    User -->|JPA| UserRepo
+    Session -->|JPA| SessionRepo
+
+    UserRepo -->|SQL| H2DB
+    SessionRepo -->|SQL| H2DB
+
+    AppConfig -.->|configure| AuthCtrl
+    SecurityConfig -.->|configure| SessionFilter
+    SecurityConfig -.->|configure| BearerTokenFilter
+    SwaggerConfig -.->|configure| Swagger
+
+    AuthCtrl -.->|OAuth Callback| PingSSO
+    PingSSO -.->|Token & User Info| AuthCtrl
+
+    Swagger -.->|test| AuthCtrl
+    RestClient -.->|test| AuthCtrl
+    Postman -.->|test| AuthCtrl
+    Docs -.->|document| AuthCtrl
+
+    style Client fill:#e1f5ff
+    style API fill:#fff3e0
+    style Security fill:#f3e5f5
+    style Services fill:#e8f5e9
+    style Entities fill:#fce4ec
+    style Repository fill:#fff9c4
+    style Database fill:#ffe0b2
+    style Config fill:#e0f2f1
+    style External fill:#f1f8e9
+    style Testing fill:#eceff1

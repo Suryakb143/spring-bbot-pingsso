@@ -1,0 +1,98 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-angular:
+    name: Build Angular App
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: angular-pingsso-app/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: angular-pingsso-app
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: angular-pingsso-app
+      run: npm run lint
+    
+    - name: Build production
+      working-directory: angular-pingsso-app
+      run: npm run build -- --configuration production
+    
+    - name: Upload Angular build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: angular-dist
+        path: angular-pingsso-app/dist/
+
+  build-springboot:
+    name: Build Spring Boot App
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        java-version: ['17', '21']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build with Maven
+      working-directory: springboot-pingsso-app
+      run: mvn clean package
+    
+    - name: Run tests
+      working-directory: springboot-pingsso-app
+      run: mvn test
+    
+    - name: Upload Spring Boot build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: springboot-jar
+        path: springboot-pingsso-app/target/*.jar
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run npm audit
+      working-directory: angular-pingsso-app
+      run: npm audit --audit-level=moderate || true
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Run OWASP dependency check
+      working-directory: springboot-pingsso-app
+      run: mvn org.owasp:dependency-check-maven:check || true

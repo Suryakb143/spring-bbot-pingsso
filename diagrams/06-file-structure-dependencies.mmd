@@ -1,0 +1,157 @@
+graph TB
+    subgraph ProjectRoot["Project Root: f:/git projects/pingsso"]
+        subgraph SB["springboot-pingsso-app"]
+            subgraph POM["📄 pom.xml"]
+                Spring["Spring Boot 3.1.0"]
+                JWT["JJWT 0.13.0"]
+                Swagger["springdoc-openapi 2.0.4"]
+                Security["Spring Security"]
+                JPA["Spring Data JPA"]
+                H2["H2 Database"]
+                Lombok["Lombok"]
+            end
+            
+            subgraph SRC["src/main"]
+                subgraph JAVA["java/com/pingsso/app"]
+                    subgraph Config["config/"]
+                        SwaggerConfig["SwaggerConfig.java<br/>- OpenAPI 3.0<br/>- Bearer token"]
+                        SecurityConfig["SecurityConfig.java<br/>- Filter chains<br/>- CORS"]
+                        DataInit["DataInitializer.java<br/>- Sample data"]
+                        CorsConfig["CorsConfig.java<br/>- localhost:4200"]
+                    end
+                    
+                    subgraph Controller["controller/"]
+                        AuthCtrl["AuthController.java<br/>@RestController<br/>9 endpoints"]
+                        UserCtrl["UserController.java<br/>@RestController"]
+                    end
+                    
+                    subgraph Entity["entity/"]
+                        UserEntity["User.java<br/>@Entity users<br/>8 fields"]
+                        SessionEntity["Session.java<br/>@Entity sessions<br/>9 fields"]
+                    end
+                    
+                    subgraph Repo["repository/"]
+                        UserRepo["UserRepository.java<br/>extends JpaRepository"]
+                        SessionRepo["SessionRepository.java<br/>extends JpaRepository"]
+                    end
+                    
+                    subgraph Service["service/"]
+                        UserService_aim["UserService.java<br/>createOrUpdateUser<br/>recordLogin"]
+                        SessionService_aim["SessionService.java<br/>createSession<br/>invalidateSession"]
+                        CustomUDSoy["CustomUserDetailsService.java"]
+                    end
+                    
+                    subgraph Security_aim["security/"]
+                        BearerTokenFilter_["BearerTokenFilter.java<br/>Extract & validate JWT"]
+                        BearerTokenProvider_["BearerTokenProvider.java<br/>Generate JWT tokens"]
+                        SessionFilter_["SessionFilter.java<br/>Extract sessionId"]
+                    end
+                    
+                    App["Application.java<br/>@SpringBootApplication"]
+                end
+                
+                subgraph RESOURCES["resources/"]
+                    AppYml["application.yml<br/>- Port: 8080<br/>- H2 config<br/>- JWT secret<br/>- Session timeout<br/>- Swagger config"]
+                end
+            end
+            
+            subgraph BuildArtifacts["target/"]
+                Classes["classes/"]
+                JAR["pingsso-springboot-app-1.0.0.jar"]
+            end
+            
+            subgraph Testing_Files["Testing & Documentation"]
+                RestClient_aim["rest-client.http<br/>VS Code REST testing"]
+                PostmanJSON_aim["PingSSO-API.postman_collection.json<br/>Postman collection"]
+                Guide_aim["API_TESTING_GUIDE.md<br/>Complete testing guide"]
+            end
+            
+            subgraph Docker["Docker"]
+                Dockerfile["Dockerfile<br/>FROM: openjdk:17<br/>EXPOSE: 8080"]
+            end
+        end
+        
+        subgraph Angular["angular-pingsso-app"]
+            subgraph AngularSrc["src/"]
+                AppComponent["app/"]
+                Routing_aim["app-routing.module.ts"]
+                CoreModule["core/<br/>- guards/<br/>  - auth.guard.ts<br/>- interceptors/<br/>  - auth.interceptor.ts<br/>- services/<br/>  - auth.service.ts"]
+                Features["features/<br/>- login/<br/>  - login.component.ts<br/>- dashboard/<br/>  - dashboard.component.ts"]
+                Shared["shared/components/"]
+                Env["environments/<br/>- environment.ts<br/>- environment.prod.ts"]
+            end
+            
+            subgraph AngularBuild["Build Config"]
+                Angular_JSON["angular.json"]
+                Package_JSON["package.json"]
+                Tsconfig["tsconfig.json"]
+            end
+            
+            subgraph AngularDocker["Docker"]
+                Nginx["nginx.conf<br/>proxy config"]
+                Dockerfile_NG["Dockerfile<br/>nginx image"]
+            end
+        end
+        
+        subgraph Root_Files["Root Configuration"]
+            ReadMe["README.md"]
+            Config["CONFIG.md"]
+            DockerCompose["docker-compose.yml"]
+            SetupBat["setup.bat"]
+            SetupSh["setup.sh"]
+        end
+    end
+    
+    AuthCtrl -->|"@Autowired"| UserService_aim
+    AuthCtrl -->|"@Autowired"| SessionService_aim
+    AuthCtrl -->|"@Autowired"| BearerTokenProvider_
+    
+    UserService_aim -->|"uses"| UserRepo
+    UserService_aim -->|"persist"| UserEntity
+    
+    SessionService_aim -->|"uses"| SessionRepo
+    SessionService_aim -->|"persist"| SessionEntity
+    
+    UserRepo -->|"JPA"| UserEntity
+    SessionRepo -->|"JPA"| SessionEntity
+    
+    SecurityConfig -->|"configures"| BearerTokenFilter_
+    SecurityConfig -->|"configures"| SessionFilter_
+    
+    CorsConfig -->|"configure"| AuthCtrl
+    
+    SwaggerConfig -->|"documents"| AuthCtrl
+    
+    AppYml -->|"config"| App
+    AppYml -->|"config"| SecurityConfig
+    
+    BearerTokenProvider_ -->|"uses"| JWT
+    
+    App -->|"starts"| Spring
+    
+    AuthCtrl -->|"HTTP"| Routing_aim
+    Features -->|"calls"| CoreModule
+    CoreModule -->|"POST /api/auth"| AuthCtrl
+    
+    Dockerfile -->|"builds"| Classes
+    Classes -->|"packages"| JAR
+    Dockerfile_NG -->|"builds"| AngularBuild
+    
+    DockerCompose -->|"orchestrates"| Dockerfile
+    DockerCompose -->|"orchestrates"| Dockerfile_NG
+    
+    RestClient_aim -.->|"tests"| AuthCtrl
+    PostmanJSON_aim -.->|"tests"| AuthCtrl
+    Guide_aim -.->|"documents"| AuthCtrl
+    
+    style SB fill:#e3f2fd
+    style Angular fill:#f3e5f5
+    style POM fill:#fff3e0
+    style SwaggerConfig fill:#c8e6c9
+    style SecurityConfig fill:#c8e6c9
+    style AuthCtrl fill:#ffccbc
+    style UserEntity fill:#f8bbd0
+    style SessionEntity fill:#f8bbd0
+    style Testing_Files fill:#eceff1
+    style Docker fill:#b3e5fc
+    style AppYml fill:#fff9c4

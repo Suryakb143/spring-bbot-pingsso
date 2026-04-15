@@ -1,0 +1,26 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>Authentication</h1>
+    <p class="subtitle">Login with PingSSO</p>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="button-group">
+      <button 
+        class="btn btn-primary" 
+        (click)="loginWithPingSso()"
+        [disabled]="isLoading">
+        {{ isLoading ? 'Loading...' : 'Login with PingSSO' }}
+      </button>
+
+      <button 
+        class="btn btn-secondary" 
+        (click)="loginAsDemo()"
+        [disabled]="isLoading">
+        Demo Login
+      </button>
+    </div>
+  </div>
+</div>

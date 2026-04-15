@@ -1,0 +1,45 @@
+sequenceDiagram
+    participant Angular as Angular App
+    participant Browser as Browser
+    participant BearerFilter as BearerTokenFilter
+    participant SessionFilter as SessionFilter
+    participant AuthCtrl as AuthController
+    participant SessionSvc as SessionService
+    participant SessionRepo as SessionRepository
+    participant H2 as H2 Database
+    
+    Note over Angular: User clicks "Get Sessions"
+    Angular->>Angular: Get bearerToken from storage
+    Angular->>Browser: GET /api/auth/sessions<br/>Authorization: Bearer {JWT token}
+    
+    Browser->>BearerFilter: HTTP Request intercepted
+    Note over BearerFilter: Extract JWT from<br/>Authorization Header
+    BearerFilter->>BearerFilter: Validate JWT signature<br/>Check expiration<br/>Extract userId & email
+    BearerFilter->>BearerFilter: Set request attribute<br/>userId = decoded value<br/>userEmail = decoded value
+    
+    Browser->>SessionFilter: Next Filter
+    Note over SessionFilter: Extract sessionId from<br/>PINGSSO_SESSION cookie
+    SessionFilter->>SessionFilter: Set request attribute<br/>sessionId = cookie value
+    
+    SessionFilter->>AuthCtrl: Forward Authenticated Request
+    
+    AuthCtrl->>AuthCtrl: Get userId from<br/>request.getAttribute("userId")
+    AuthCtrl->>AuthCtrl: Verify userId is not null
+    
+    opt Unauthorized Check
+        AuthCtrl->>AuthCtrl: If userId == null
+        AuthCtrl-->>Browser: HTTP 401<br/>{error: "Unauthorized"}
+    end
+    
+    AuthCtrl->>SessionSvc: getActiveSessionsForUser(userId)
+    SessionSvc->>SessionRepo: findByUserIdAndActive(userId, true)
+    SessionRepo->>H2: SELECT * FROM sessions<br/>WHERE user_id = ? AND active = true
+    H2-->>SessionRepo: List<Session>
+    SessionRepo-->>SessionSvc: Sessions List
+    SessionSvc-->>AuthCtrl: Active Sessions
+    
+    AuthCtrl->>AuthCtrl: Build Response<br/>{<br/>  success: true,<br/>  sessions: [...],<br/>  count: N<br/>}
+    
+    AuthCtrl-->>Browser: HTTP 200 OK
+    Browser-->>Angular: Response with Sessions
+    Angular->>Angular: Display sessions<br/>in UI

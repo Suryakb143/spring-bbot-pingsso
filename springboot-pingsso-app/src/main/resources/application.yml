@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: pingsso-springboot-app
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    use-root-path: true
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: false
+
+# PingSSO Configuration
+pingsso:
+  client-id: springboot-app-client
+  client-secret: your-client-secret
+  discovery-url: https://pingsso.example.com/.well-known/openid-configuration
+  authorization-uri: https://pingsso.example.com/as/authorization.oauth2
+  token-uri: https://pingsso.example.com/as/token.oauth2
+  user-info-uri: https://pingsso.example.com/idp/userinfo.openid
+  scopes: openid,profile,email
+
+# Session Configuration
+session:
+  timeout-minutes: 1440  # 24 hours
+  cookie-name: PINGSSO_SESSION
+  cookie-path: /
+  cookie-secure: true
+  cookie-http-only: true
+
+# Bearer Token (JWT) Configuration
+bearer:
+  token:
+    secret: your-super-secret-jwt-key-min-32-chars-for-hs512-algorithm-change-in-production
+    expiration-ms: 86400000  # 24 hours in milliseconds
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    com.pingsso.app: DEBUG

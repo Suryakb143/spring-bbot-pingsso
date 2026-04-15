@@ -1,0 +1,51 @@
+sequenceDiagram
+    participant Angular as Angular App<br/>localhost:4200
+    participant Browser as Browser
+    participant CORS as CORS Filter
+    participant AuthCtrl as AuthController
+    participant UserSvc as UserService
+    participant SessionSvc as SessionService
+    participant TokenProv as BearerTokenProvider
+    participant UserRepo as UserRepository
+    participant SessionRepo as SessionRepository
+    participant H2 as H2 Database
+    
+    Angular->>Browser: POST /api/auth/login<br/>{email, pingSsoId, name, picture}
+    Browser->>CORS: HTTP Request
+    Note over CORS: Check CORS<br/>Origin: localhost:4200
+    CORS->>AuthCtrl: Forward Request
+    
+    AuthCtrl->>UserSvc: createOrUpdateUser(email, name, picture, pingSsoId)
+    UserSvc->>UserRepo: findByEmail(email) OR create new
+    UserRepo->>H2: Query/Insert User
+    H2-->>UserRepo: User Object
+    UserRepo-->>UserSvc: User
+    UserSvc-->>AuthCtrl: User (with id)
+    
+    AuthCtrl->>UserSvc: recordLogin(userId, ipAddress)
+    UserSvc->>UserSvc: Update lastLoginIp & lastLoginTime
+    UserSvc->>UserRepo: save(user)
+    UserRepo->>H2: Update User
+    
+    AuthCtrl->>SessionSvc: createSession(user, request)
+    SessionSvc->>SessionSvc: Generate sessionId (UUID)
+    SessionSvc->>SessionSvc: Set createdAt, expiresAt, ipAddress
+    SessionSvc->>SessionRepo: save(session)
+    SessionRepo->>H2: Insert Session
+    H2-->>SessionRepo: Session (with id)
+    SessionRepo-->>SessionSvc: Session
+    SessionSvc-->>AuthCtrl: Session
+    
+    AuthCtrl->>TokenProv: generateToken(email, claims)
+    TokenProv->>TokenProv: Create JWT Token<br/>claims: userId, roles
+    TokenProv-->>AuthCtrl: bearerToken (JWT)
+    
+    AuthCtrl->>AuthCtrl: setSessionCookie(response, sessionId)
+    Note over AuthCtrl: Create ResponseCookie<br/>HttpOnly=true<br/>Secure=true<br/>SameSite=Strict
+    
+    AuthCtrl->>AuthCtrl: Build Response DTO
+    Note over AuthCtrl: {<br/>  success: true,<br/>  user: User object,<br/>  sessionId: string,<br/>  bearerToken: JWT,<br/>  expiresAt: datetime,<br/>  tokenType: "Bearer",<br/>  expiresIn: 86400<br/>}
+    
+    AuthCtrl-->>Browser: HTTP 200 OK<br/>+ Set-Cookie header<br/>+ Response Body
+    Browser-->>Angular: Response + Cookie
+    Angular->>Angular: Store bearerToken<br/>Store sessionId<br/>Redirect to dashboard

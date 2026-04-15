@@ -1,0 +1,10 @@
+- [x] Spring Boot application with PingSSO OAuth2 integration
+- [x] JPA entities with User model and sample test data
+- [x] UserRepository with custom queries
+- [x] UserService for business logic
+- [x] AuthController with login/logout endpoints
+- [x] UserController with CRUD operations
+- [x] Security configuration with CORS
+- [x] Data initializer with 4 sample users
+- [x] H2 in-memory database configuration
+- [x] Application properties with PingSSO config

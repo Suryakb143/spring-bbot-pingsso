@@ -1,0 +1,250 @@
+{
+  "info": {
+    "_postman_id": "pingsso-api-collection",
+    "name": "PingSSO Spring Boot API",
+    "description": "Collection for testing PingSSO Spring Boot Authentication API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Login and authentication endpoints",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"pingSsoId\": \"pingsso-123456\",\n  \"name\": \"Test User\",\n  \"picture\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authenticate user with email and PingSSO profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "OAuth Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userInfo\": {\n    \"sub\": \"pingsso-callback-123\",\n    \"email\": \"callback@example.com\",\n    \"name\": \"Callback User\",\n    \"picture\": \"https://example.com/callback-avatar.jpg\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "callback"]
+            },
+            "description": "Process OAuth callback from PingSSO provider"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "description": "Session management endpoints",
+      "item": [
+        {
+          "name": "Get Active Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sessions"]
+            },
+            "description": "Retrieve all active sessions for the current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "PINGSSO_SESSION={{sessionId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session-info"]
+            },
+            "description": "Retrieve details about the current session"
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sessions/{{sessionId}}/revoke",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sessions", "{{sessionId}}", "revoke"]
+            },
+            "description": "Invalidate a specific session"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "description": "User information endpoints",
+      "item": [
+        {
+          "name": "Get User Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/user-info?email={{email}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "user-info"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{email}}"
+                }
+              ]
+            },
+            "description": "Retrieve user information by email address"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Token",
+      "description": "Token management endpoints",
+      "item": [
+        {
+          "name": "Generate Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Generate a new Bearer token for an authenticated user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "description": "Logout endpoints",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "PINGSSO_SESSION={{sessionId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Invalidate the current user session and remove session cookie"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout-all"]
+            },
+            "description": "Invalidate all sessions for the current user across all devices"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

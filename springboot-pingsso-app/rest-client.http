@@ -1,0 +1,117 @@
+### PingSSO Spring Boot API Testing
+### REST Client file for testing AuthController endpoints
+### Install "REST Client" extension by Huachao Mou to use this file
+
+@baseUrl = http://localhost:8080
+@apiPrefix = /api/auth
+
+### Variables for storing response data
+@sessionId = 
+@bearerToken = 
+@userId = 1
+@email = test@example.com
+
+### ==================================
+### 1. LOGIN ENDPOINT
+### ==================================
+
+### Login with PingSSO profile
+POST {{baseUrl}}{{apiPrefix}}/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "pingSsoId": "pingsso-123456",
+  "name": "Test User",
+  "picture": "https://example.com/avatar.jpg"
+}
+
+@name Login
+
+### ==================================
+### 2. CALLBACK ENDPOINT
+### ==================================
+
+### Handle OAuth callback from PingSSO
+POST {{baseUrl}}{{apiPrefix}}/callback
+Content-Type: application/json
+
+{
+  "userInfo": {
+    "sub": "pingsso-callback-123",
+    "email": "callback@example.com",
+    "name": "Callback User",
+    "picture": "https://example.com/callback-avatar.jpg"
+  }
+}
+
+@name OAuth Callback
+
+### ==================================
+### 3. SESSION ENDPOINTS
+### ==================================
+
+### Get active sessions (requires authentication)
+GET {{baseUrl}}{{apiPrefix}}/sessions
+Authorization: Bearer {{bearerToken}}
+
+@name Get Active Sessions
+
+### Get session information (requires authentication)
+GET {{baseUrl}}{{apiPrefix}}/session-info
+Authorization: Bearer {{bearerToken}}
+Cookie: PINGSSO_SESSION={{sessionId}}
+
+@name Get Session Info
+
+### Revoke a specific session (requires authentication)
+POST {{baseUrl}}{{apiPrefix}}/sessions/{{sessionId}}/revoke
+Authorization: Bearer {{bearerToken}}
+
+@name Revoke Session
+
+### ==================================
+### 4. USER ENDPOINTS
+### ==================================
+
+### Get user information by email
+GET {{baseUrl}}{{apiPrefix}}/user-info?email={{email}}
+
+@name Get User Info
+
+### ==================================
+### 5. TOKEN ENDPOINTS
+### ==================================
+
+### Generate a new bearer token (requires authentication)
+POST {{baseUrl}}{{apiPrefix}}/token
+Authorization: Bearer {{bearerToken}}
+
+@name Generate Token
+
+### ==================================
+### 6. LOGOUT ENDPOINTS
+### ==================================
+
+### Logout (invalidate current session)
+POST {{baseUrl}}{{apiPrefix}}/logout
+Authorization: Bearer {{bearerToken}}
+Cookie: PINGSSO_SESSION={{sessionId}}
+
+@name Logout
+
+### Logout all sessions for the user
+POST {{baseUrl}}{{apiPrefix}}/logout-all
+Authorization: Bearer {{bearerToken}}
+
+@name Logout All Sessions
+
+### ==================================
+### USAGE INSTRUCTIONS:
+### ==================================
+### 1. Install "REST Client" extension in VS Code
+### 2. Update @baseUrl, @email, @sessionId, and @bearerToken variables
+### 3. Click "Send Request" above each request to execute
+### 4. Responses will appear in a side panel
+### 5. Successful login will return sessionId and bearerToken
+### 6. Copy those values to the variables above for authenticated requests

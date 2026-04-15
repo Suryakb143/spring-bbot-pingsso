@@ -1,0 +1,79 @@
+# Git ignore for PingSSO Workspace
+
+# Dependencies
+node_modules/
+.npm
+package-lock.json
+yarn.lock
+.pnp
+.pnp.js
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+.m2/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.iml
+*.iws
+.classpath
+.project
+.settings/
+
+# Build
+dist/
+build/
+*.jar
+*.war
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+maven-debug.log
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+~*
+.~*
+
+# Application specific
+auth_token
+current_user
+token_expiration
+.h2browser

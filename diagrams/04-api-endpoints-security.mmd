@@ -1,0 +1,93 @@
+graph TB
+    subgraph API["AuthController (/api/auth)"]
+        
+        subgraph Public["🟢 Public Endpoints"]
+            Login["POST /login<br/>Request: email, pingSsoId, name, picture<br/>Response: user, sessionId, bearerToken<br/>Status: 200/400/500"]
+            Callback["POST /callback<br/>Request: userInfo {sub, email, name}<br/>Response: user, sessionId, bearerToken<br/>Status: 200/400/500"]
+            UserInfo["GET /user-info<br/>Query: email<br/>Response: User object<br/>Status: 200/404"]
+        end
+        
+        subgraph Protected["🔒 Token Protected (Bearer)"]
+            Sessions["GET /sessions<br/>Response: sessions[], count<br/>Status: 200/401"]
+            SessionInfo["GET /session-info<br/>Response: session details<br/>Status: 200/401"]
+            GenerateToken["POST /token<br/>Response: bearerToken, tokenType, expiresIn<br/>Status: 200/401/404"]
+            Logout["POST /logout<br/>Response: success message<br/>Status: 200/401"]
+            LogoutAll["POST /logout-all<br/>Response: success message<br/>Status: 200/401"]
+        end
+        
+        subgraph Protected2["🔒 Token Protected (Bearer + Path)"]
+            RevokeSession["POST /sessions/{sessionId}/revoke<br/>Response: success message<br/>Status: 200/401/403"]
+        end
+    end
+    
+    subgraph Filters["Security Filters"]
+        SessionFilter["SessionFilter<br/>Extract sessionId from cookie"]
+        BearerFilter["BearerTokenFilter<br/>Extract & validate Bearer token<br/>Set userId & userEmail attributes"]
+        CORS["CORS Filter<br/>Allow: localhost:4200"]
+    end
+    
+    subgraph Request["Request Flow"]
+        ReqIn["Incoming Request"]
+        ReqIn -->|Step 1| CORS
+        CORS -->|Step 2| SessionFilter
+        SessionFilter -->|Step 3| BearerFilter
+        BearerFilter -->|Step 4| AuthCtrl_Check["Check @RequestAttribute"]
+    end
+    
+    subgraph Database["Database Operations"]
+        UserTable["users table<br/>- id (PK)<br/>- email (UNIQUE)<br/>- name<br/>- picture<br/>- roles (ElementCollection)<br/>- pingSsoId<br/>- lastLoginIp<br/>- lastLoginTime<br/>- active<br/>- createdAt"]
+        
+        SessionTable["sessions table<br/>- id (PK)<br/>- sessionId (UNIQUE)<br/>- userId (FK)<br/>- email<br/>- ipAddress<br/>- userAgent<br/>- createdAt<br/>- lastAccessedAt<br/>- expiresAt<br/>- active<br/>- deviceName"]
+    end
+    
+    subgraph Auth["Authentication Methods"]
+        Method1["Public: No Auth<br/>- /login<br/>- /callback<br/>- /user-info"]
+        Method2["Bearer Token: JWT<br/>Header: Authorization: Bearer {token}<br/>Payload: userId, email, roles"]
+        Method3["Session Cookie: HttpOnly<br/>Cookie: PINGSSO_SESSION={base64}<br/>Only for validation"]
+    end
+    
+    subgraph Response["Response Types"]
+        Success["✅ Success<br/>{<br/>  success: true,<br/>  data: {...}<br/>}"]
+        NotFound["❌ 404 Not Found<br/>{<br/>  error: 'Not found'<br/>}"]
+        Unauthorized["❌ 401 Unauthorized<br/>{<br/>  error: 'Unauthorized'<br/>}"]
+        Forbidden["❌ 403 Forbidden<br/>{<br/>  error: 'Forbidden'<br/>}"]
+        BadRequest["❌ 400 Bad Request<br/>{<br/>  error: 'Invalid request'<br/>}"]
+    end
+    
+    API -->|Uses| Filters
+    AuthCtrl_Check -->|Public| Public
+    AuthCtrl_Check -->|Requires Token| Protected
+    AuthCtrl_Check -->|Requires Token + ID| Protected2
+    
+    Protected -->|Query| UserTable
+    Protected -->|Query| SessionTable
+    Protected2 -->|Update| SessionTable
+    
+    Login -->|Insert/Update| UserTable
+    Login -->|Insert| SessionTable
+    Callback -->|Insert/Update| UserTable
+    Callback -->|Insert| SessionTable
+    
+    SessionInfo -->|Query| SessionTable
+    Sessions -->|Query| SessionTable
+    RevokeSession -->|Update| SessionTable
+    
+    Public -.->|Response| Success
+    Protected -.->|Response| Success
+    Login -.->|Response| Success
+    Protected -.->|Auth Required| Unauthorized
+    RevokeSession -.->|Access Denied| Forbidden
+    UserInfo -.->|Not Found| NotFound
+    
+    style API fill:#fff3e0
+    style Public fill:#c8e6c9
+    style Protected fill:#ffccbc
+    style Protected2 fill:#ffccbc
+    style Filters fill:#b3e5fc
+    style Database fill:#f8bbd0
+    style Auth fill:#ffe0b2
+    style Response fill:#e0f2f1
+    style Success fill:#a5d6a7
+    style Unauthorized fill:#ef9a9a
+    style Forbidden fill:#ef9a9a
+    style NotFound fill:#ef9a9a

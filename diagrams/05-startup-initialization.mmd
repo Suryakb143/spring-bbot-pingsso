@@ -1,0 +1,79 @@
+graph TD
+    Start["🚀 Application Startup<br/>mvn spring-boot:run"]
+    
+    Start -->|1. Load Properties| AppYML["application.yml<br/>- Spring settings<br/>- Database config<br/>- JWT secret<br/>- Swagger config<br/>- Session timeout"]
+    
+    AppYML -->|2. Spring Boot Initialization| SpringInit["Spring Boot 3.1.0<br/>Starts embedded Tomcat<br/>on port 8080"]
+    
+    SpringInit -->|3. Auto-configure Beans| AutoConfig["Auto Configuration<br/>- DataSource<br/>- JPA/Hibernate<br/>- Security<br/>- Spring Data<br/>- Servlet"]
+    
+    AutoConfig -->|4a. Load Custom Configs| ConfigClasses["Configuration Classes"]
+    
+    ConfigClasses -->|SwaggerConfig.java| SwaggerInit["Initialize OpenAPI<br/>- Register JWT scheme<br/>- API metadata<br/>- Info & contact"]
+    
+    ConfigClasses -->|SecurityConfig.java| SecConfig["Configure Security<br/>- Add SessionFilter<br/>- Add BearerTokenFilter<br/>- Set CORS rules<br/>- Filter chain order"]
+    
+    ConfigClasses -->|CorsConfig.java| CorsInit["CORS Configuration<br/>Allow: localhost:4200<br/>Methods: GET/POST/PUT/DELETE<br/>Credentials: true"]
+    
+    ConfigClasses -->|DataInitializer.java| DataInit["Data Initialization<br/>- Create sample users<br/>- Create test data<br/>- Pre-populate DB"]
+    
+    AutoConfig -->|4b. Register Repositories| RepoReg["Register Repositories<br/>- UserRepository<br/>- SessionRepository<br/>- Enable JPA proxies"]
+    
+    AutoConfig -->|4c. Register Services| ServiceReg["Register Services<br/>- UserService<br/>- SessionService<br/>- CustomUserDetailsService"]
+    
+    AutoConfig -->|4d. Register Controllers| CtrlReg["Register REST Controllers<br/>- AuthController<br/>  @RestController<br/>  @RequestMapping(/api/auth)<br/>- UserController<br/>  @RestController<br/>  @RequestMapping(/api/users)"]
+    
+    SwaggerInit -->|5. Initialize Filters| FilterInit["Initialize Security Filters"]
+    SecConfig -->|5a. Filter Chain| FilterChain["Filter Chain Order<br/>1. CORS Filter<br/>2. SessionFilter<br/>3. BearerTokenFilter<br/>4. Spring Security<br/>5. Servlet Filter"]
+    
+    DataInit -->|6. Database Ready| DBReady["H2 Database<br/>In-Memory Instance<br/>Tables: users, sessions<br/>Status: Ready"]
+    
+    CtrlReg -->|7. Routes Registered| RoutesReady["API Routes Ready<br/>9 endpoints in /api/auth<br/>Swagger UI ready<br/>API Docs ready"]
+    
+    FilterChain --> Ready["✅ Application Ready<br/>http://localhost:8080"]
+    DBReady --> Ready
+    RoutesReady --> Ready
+    CorsInit --> Ready
+    
+    Ready -->|User Access| Swagger["Swagger UI<br/>http://localhost:8080/swagger-ui.html"]
+    Ready -->|API Docs| ApiDocs["OpenAPI Docs<br/>http://localhost:8080/api-docs"]
+    Ready -->|Client App| Angular["Angular Frontend<br/>http://localhost:4200"]
+    
+    Swagger -->|Try it out| TestEndpoint["Test Endpoints<br/>Interactive Testing"]
+    ApiDocs -->|View spec| ViewSpec["View Full API<br/>Specification"]
+    Angular -->|HTTP Requests| APICall["Call API Endpoints<br/>with Bearer Token/Cookies"]
+    
+    APICall -->|Request| FilterChain
+    TestEndpoint -->|Request| FilterChain
+    
+    subgraph Startup["Startup Steps 1-7"]
+        AppYML
+        SpringInit
+        AutoConfig
+        ConfigClasses
+        RepoReg
+        ServiceReg
+        CtrlReg
+        FilterInit
+        DBReady
+        RoutesReady
+    end
+    
+    subgraph Runtime["Runtime - Request Processing"]
+        FilterChain
+        APICall
+        TestEndpoint
+    end
+    
+    style Start fill:#4caf50
+    style Ready fill:#4caf50
+    style Startup fill:#e3f2fd
+    style Runtime fill:#fff3e0
+    style AppYML fill:#fff9c4
+    style SwaggerInit fill:#c8e6c9
+    style SecConfig fill:#c8e6c9
+    style FilterChain fill:#ffccbc
+    style DBReady fill:#f8bbd0
+    style RoutesReady fill:#ffccbc
+    style Swagger fill:#b3e5fc
+    style Angular fill:#f3e5f5

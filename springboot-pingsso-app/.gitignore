@@ -1,0 +1,14 @@
+/.idea/
+*.iml
+*.iws
+*.ipr
+/target/
+/out/
+.DS_Store
+*.class
+*.jar
+*.war
+*.zip
+*.tar.gz
+.env
+.env.local

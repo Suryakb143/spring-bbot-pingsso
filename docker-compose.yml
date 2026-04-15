@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Spring Boot Backend
+  springboot-api:
+    build:
+      context: ./springboot-pingsso-app
+      dockerfile: Dockerfile
+    container_name: pingsso-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_APPLICATION_NAME=pingsso-springboot-app
+      - SERVER_PORT=8080
+      - PINGSSO_CLIENT_ID=${PINGSSO_CLIENT_ID:-springboot-app-client}
+      - PINGSSO_CLIENT_SECRET=${PINGSSO_CLIENT_SECRET:-your-client-secret}
+      - PINGSSO_DISCOVERY_URL=${PINGSSO_DISCOVERY_URL:-https://pingsso.example.com/.well-known/openid-configuration}
+      - PINGSSO_AUTHORIZATION_URI=${PINGSSO_AUTHORIZATION_URI:-https://pingsso.example.com/as/authorization.oauth2}
+      - PINGSSO_TOKEN_URI=${PINGSSO_TOKEN_URI:-https://pingsso.example.com/as/token.oauth2}
+      - PINGSSO_USER_INFO_URI=${PINGSSO_USER_INFO_URI:-https://pingsso.example.com/idp/userinfo.openid}
+      - LOGGING_LEVEL_COM_PINGSSO_APP=DEBUG
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/users/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - pingsso-network
+    restart: unless-stopped
+
+  # Angular Frontend
+  angular-app:
+    build:
+      context: ./angular-pingsso-app
+      dockerfile: Dockerfile
+      args:
+        - PINGSSO_CLIENT_ID=${PINGSSO_CLIENT_ID:-angular-app-client}
+        - PINGSSO_REDIRECT_URI=${PINGSSO_REDIRECT_URI:-http://localhost:4200/callback}
+        - PINGSSO_AUTH_ENDPOINT=${PINGSSO_AUTH_ENDPOINT:-https://pingsso.example.com/as/authorization.oauth2}
+        - PINGSSO_TOKEN_ENDPOINT=${PINGSSO_TOKEN_ENDPOINT:-https://pingsso.example.com/as/token.oauth2}
+        - PINGSSO_USERINFO_ENDPOINT=${PINGSSO_USERINFO_ENDPOINT:-https://pingsso.example.com/idp/userinfo.openid}
+        - API_URL=${API_URL:-http://springboot-api:8080/api}
+    container_name: pingsso-app
+    ports:
+      - "4200:80"
+    depends_on:
+      springboot-api:
+        condition: service_healthy
+    networks:
+      - pingsso-network
+    restart: unless-stopped
+
+networks:
+  pingsso-network:
+    driver: bridge
